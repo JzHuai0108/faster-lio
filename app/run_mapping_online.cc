@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
     faster_lio::Timer::PrintAll();
     LOG(INFO) << "save trajectory to: " << FLAGS_traj_log_file;
-    laser_mapping->Savetrajectory(FLAGS_traj_log_file);
+    laser_mapping->Savetrajectory(FLAGS_traj_log_file, laser_mapping->I_p_B_, laser_mapping->I_q_B_);
 
     return 0;
 }

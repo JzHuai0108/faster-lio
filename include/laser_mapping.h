@@ -59,7 +59,7 @@ class LaserMapping {
     void PublishFrameWorld();
     void PublishFrameBody(const ros::Publisher &pub_laser_cloud_body);
     void PublishFrameEffectWorld(const ros::Publisher &pub_laser_cloud_effect_world);
-    void Savetrajectory(const std::string &traj_file);
+    void Savetrajectory(const std::string &traj_file, const common::V3D &I_p_B, const Eigen::Quaterniond &I_q_B);
 
     void Finish();
 
@@ -171,6 +171,12 @@ class LaserMapping {
     PointCloudType::Ptr pcl_wait_save_{new PointCloudType()};  // debug save
     nav_msgs::Path path_;
     geometry_msgs::PoseStamped msg_body_pose_;
+   public:
+    std::string lid_topic_;
+    std::string imu_topic_;
+    std::string output_ref_frame_;
+    common::V3D I_p_B_;
+    Eigen::Quaterniond I_q_B_;
 };
 
 }  // namespace faster_lio

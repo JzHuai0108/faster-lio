@@ -1,0 +1,59 @@
+common:
+    lid_topic:  "/hesai/pandar"  # for hiltislam2022 datasets
+    imu_topic:  "/mti3dk/imu"
+    time_sync_en: false         # ONLY turn on when external time synchronization is really not possible
+    time_offset_lidar_to_imu: 0.0 # lidar clock for lidar messages + time_offset_lidar_to_imu == imu clock for imu messages.
+
+preprocess:
+    lidar_type: 4                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 
+    scan_line: 32
+    blind: 2.0                          # the lidar is unable to measure distances less than blind.
+    time_scale: 1000
+
+mapping:
+    acc_cov: 0.4                # \sigma^2*frequency
+    gyr_cov: 0.1
+    b_acc_cov: 0.01
+    b_gyr_cov: 0.01
+    fov_degree:    180
+    det_range:     120.0
+
+    icp_dist_thresh: 0.8 # The larger, the less points will be selected for ICP matching.
+    extrinsic_est_en: false
+    extrinsic_T: [-0.012713, -0.001295, 0.184497] # hesai xt32 in mti3dk imu.
+    extrinsic_R: [-0.099438, -0.992995, -0.063813,
+                  0.994106, -0.101923,  0.036942,
+                 -0.043187, -0.059763,  0.997278]
+    gravity_m_s2: 9.79354 # wuhan earth surface local gravity
+    init_pos_noise: 0.0
+    init_rot_noise: 0.0
+    tls_dist_thresh: 8.0
+
+publish:
+    path_publish_en: false
+    scan_publish_en:  true       # 'false' will close all the point cloud output
+    scan_effect_pub_en: true    # true: publish the pointscloud of effect point
+    dense_publish_en: false       # false will low down the points number in a global-frame point clouds scan.
+    scan_bodyframe_pub_en: true  # output the point cloud scans in a body frame
+    output_ref_frame: lidar
+    show_submap: false
+
+path_save_en: true   # 保存轨迹，用于精度计算和比较
+
+pcd_save:
+    pcd_save_en: false
+    interval: -1                 # how many LiDAR frames saved in each pcd file; 
+                                 # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+
+feature_extract_enable: false
+point_filter_num: 10
+max_iteration: 10
+scan_publish_enable: 1
+dense_publish_enable: 1
+filter_size_surf: 0.25
+filter_size_map: 0.25
+cube_side_length: 1000
+ivox_grid_resolution: 0.5        # default=0.2
+ivox_nearby_type: 18             # 6, 18, 26
+esti_plane_threshold: 0.1        # The larger, the more surfels will be accepted as planes.
+runtime_pos_log_enable: 0

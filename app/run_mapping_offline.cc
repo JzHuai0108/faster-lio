@@ -47,7 +47,12 @@ int main(int argc, char **argv) {
     rosbag::Bag bag(FLAGS_bag_file, rosbag::bagmode::Read);
 
     LOG(INFO) << "Go!";
-    for (const rosbag::MessageInstance &m : rosbag::View(bag)) {
+
+    std::vector<std::string> topics;
+    topics.push_back(laser_mapping->lid_topic_);
+    topics.push_back(laser_mapping->imu_topic_);
+    rosbag::View view(bag, rosbag::TopicQuery(topics));
+    for (const rosbag::MessageInstance &m : view) {
         auto livox_msg = m.instantiate<livox_ros_driver::CustomMsg>();
         if (livox_msg) {
             faster_lio::Timer::Evaluate(
@@ -89,7 +94,8 @@ int main(int argc, char **argv) {
     LOG(INFO) << "Faster LIO average FPS: " << fps;
 
     LOG(INFO) << "save trajectory to: " << FLAGS_traj_log_file;
-    laser_mapping->Savetrajectory(FLAGS_traj_log_file);
+
+    laser_mapping->Savetrajectory(FLAGS_traj_log_file, laser_mapping->I_p_B_, laser_mapping->I_q_B_);
 
     faster_lio::Timer::PrintAll();
     faster_lio::Timer::DumpIntoFile(FLAGS_time_log_file);

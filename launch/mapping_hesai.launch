@@ -1,0 +1,27 @@
+<launch>
+<!-- Launch file for Livox AVIA LiDAR -->
+
+	<arg name="rviz" default="true" />
+    <arg name="bag_file" default="" />
+    <arg name="traj_log_file" default="" />
+	<arg name="config_yaml" default="$(find faster_lio)/config/hesai32_mti3dk_handheld.yaml" />
+
+	<rosparam command="load" file="$(arg config_yaml)" />
+
+	<param name="feature_extract_enable" type="bool" value="0"/>
+	<param name="point_filter_num_" type="int" value="3"/>
+	<param name="max_iteration" type="int" value="3" />
+	<param name="filter_size_surf" type="double" value="0.5" />
+	<param name="filter_size_map" type="double" value="0.5" />
+	<param name="cube_side_length" type="double" value="1000" />
+	<param name="runtime_pos_log_enable" type="bool" value="1" />
+    <node pkg="faster_lio" type="run_mapping_online" name="laserMapping" 
+	  args="--traj_log_file $(arg traj_log_file)" output="screen" />
+
+	<group if="$(arg rviz)">
+	<node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find faster_lio)/rviz_cfg/loam_livox.rviz" />
+	</group>
+
+	<node pkg="rosbag" type="play" name="rosbag" args="$(arg bag_file)" output="screen" required="true" />
+
+</launch>

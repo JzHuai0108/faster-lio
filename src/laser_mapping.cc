@@ -105,6 +105,9 @@ bool LaserMapping::LoadParams(ros::NodeHandle &nh) {
     } else if (lidar_type == 3) {
         preprocess_->SetLidarType(LidarType::OUST64);
         LOG(INFO) << "Using OUST 64 Lidar";
+    } else if (lidar_type == 4) {
+        preprocess_->SetLidarType(LidarType::HesaiPandar);
+        LOG(INFO) << "Using Hesai Pandar Lidar";
     } else {
         LOG(WARNING) << "unknown lidar_type";
         return false;
@@ -149,6 +152,10 @@ bool LaserMapping::LoadParamsFromYAML(const std::string &yaml_file) {
 
     auto yaml = YAML::LoadFile(yaml_file);
     try {
+        lid_topic_ = yaml["common"]["lid_topic"].as<std::string>("/livox/lidar");
+        imu_topic_ = yaml["common"]["imu_topic"].as<std::string>("/livox/imu");
+        output_ref_frame_ = yaml["publish"]["output_ref_frame"].as<std::string>("lidar");
+
         path_pub_en_ = yaml["publish"]["path_publish_en"].as<bool>();
         scan_pub_en_ = yaml["publish"]["scan_publish_en"].as<bool>();
         dense_pub_en_ = yaml["publish"]["dense_publish_en"].as<bool>();
@@ -184,8 +191,8 @@ bool LaserMapping::LoadParamsFromYAML(const std::string &yaml_file) {
 
         ivox_options_.resolution_ = yaml["ivox_grid_resolution"].as<float>();
         ivox_nearby_type = yaml["ivox_nearby_type"].as<int>();
-    } catch (...) {
-        LOG(ERROR) << "bad conversion";
+    } catch (const std::exception &e) {
+        LOG(ERROR) << e.what();
         return false;
     }
 
@@ -199,6 +206,9 @@ bool LaserMapping::LoadParamsFromYAML(const std::string &yaml_file) {
     } else if (lidar_type == 3) {
         preprocess_->SetLidarType(LidarType::OUST64);
         LOG(INFO) << "Using OUST 64 Lidar";
+    } else if (lidar_type == 4) {
+        preprocess_->SetLidarType(LidarType::HesaiPandar);
+        LOG(INFO) << "Using Hesai Pandar Lidar";
     } else {
         LOG(WARNING) << "unknown lidar_type";
         return false;
@@ -221,7 +231,19 @@ bool LaserMapping::LoadParamsFromYAML(const std::string &yaml_file) {
 
     lidar_T_wrt_IMU = common::VecFromArray<double>(extrinT_);
     lidar_R_wrt_IMU = common::MatFromArray<double>(extrinR_);
-
+    if (output_ref_frame_ == "imu") {
+        I_p_B_.setZero();
+        I_q_B_.setIdentity();
+        LOG(INFO) << "output_ref_frame is IMU";
+    } else if (output_ref_frame_ == "lidar") {
+        I_p_B_ = lidar_T_wrt_IMU;
+        I_q_B_ = Eigen::Quaterniond(lidar_R_wrt_IMU);
+        LOG(INFO) << "output_ref_frame is lidar";
+    } else {
+        LOG(ERROR) << "unknown output_ref_frame " << output_ref_frame_;
+        I_p_B_.setZero();
+        I_q_B_.setIdentity();
+    }
     p_imu_->SetExtrinsic(lidar_T_wrt_IMU, lidar_R_wrt_IMU);
     p_imu_->SetGyrCov(common::V3D(gyr_cov, gyr_cov, gyr_cov));
     p_imu_->SetAccCov(common::V3D(acc_cov, acc_cov, acc_cov));
@@ -782,7 +804,7 @@ void LaserMapping::PublishFrameEffectWorld(const ros::Publisher &pub_laser_cloud
     publish_count_ -= options::PUBFRAME_PERIOD;
 }
 
-void LaserMapping::Savetrajectory(const std::string &traj_file) {
+void LaserMapping::Savetrajectory(const std::string &traj_file, const common::V3D &I_p_B, const Eigen::Quaterniond &I_q_B) {
     std::ofstream ofs;
     ofs.open(traj_file, std::ios::out);
     if (!ofs.is_open()) {
@@ -792,9 +814,13 @@ void LaserMapping::Savetrajectory(const std::string &traj_file) {
 
     ofs << "#timestamp x y z q_x q_y q_z q_w" << std::endl;
     for (const auto &p : path_.poses) {
+        Eigen::Vector3d W_p_I(p.pose.position.x, p.pose.position.y, p.pose.position.z);
+        Eigen::Quaterniond W_q_I(p.pose.orientation.w, p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z);
+        Eigen::Vector3d W_p_B = W_p_I + W_q_I * I_p_B;
+        Eigen::Quaterniond W_q_B = W_q_I * I_q_B;
         ofs << std::fixed << std::setprecision(6) << p.header.stamp.toSec() << " " << std::setprecision(15)
-            << p.pose.position.x << " " << p.pose.position.y << " " << p.pose.position.z << " " << p.pose.orientation.x
-            << " " << p.pose.orientation.y << " " << p.pose.orientation.z << " " << p.pose.orientation.w << std::endl;
+            << W_p_B[0] << " " << W_p_B[1] << " " << W_p_B[2] << " "
+            << W_q_B.x() << " " << W_q_B.y() << " " << W_q_B.z() << " " << W_q_B.w() << std::endl;
     }
 
     ofs.close();
