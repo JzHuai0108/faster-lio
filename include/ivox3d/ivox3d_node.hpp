@@ -112,9 +112,9 @@ struct IVoxNode<PointT, dim>::DistPoint {
 
     PointT Get() { return node->GetPoint(idx); }
 
-    inline bool operator()(const DistPoint& p1, const DistPoint& p2) { return p1.dist < p2.dist; }
+    inline bool operator()(const DistPoint& p1, const DistPoint& p2) const { return p1.dist < p2.dist; }
 
-    inline bool operator<(const DistPoint& rhs) { return dist < rhs.dist; }
+    inline bool operator<(const DistPoint& rhs) const { return dist < rhs.dist; }
 };
 
 template <typename PointT, int dim>

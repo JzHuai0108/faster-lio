@@ -51,7 +51,7 @@ void PointCloudPreprocess::AviaHandler(const livox_ros_driver::CustomMsg::ConstP
         index[i] = i + 1;  // 从1开始
     }
 
-    std::for_each(std::execution::par_unseq, index.begin(), index.end(), [&](const uint &i) {
+    std::for_each(index.begin(), index.end(), [&](const uint &i) {
         if ((msg->points[i].line < num_scans_) &&
             ((msg->points[i].tag & 0x30) == 0x10 || (msg->points[i].tag & 0x30) == 0x00)) {
             if (i % point_filter_num_ == 0) {

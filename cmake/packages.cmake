@@ -1,7 +1,7 @@
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # glog
-find_package(Glog REQUIRED)
+find_package(Glog QUIET)
 include_directories(${Glog_INCLUDE_DIRS})
 
 # for ubuntu 18.04, update gcc/g++ to 9, and download tbb2018 from

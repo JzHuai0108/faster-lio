@@ -2,7 +2,6 @@
 // Created by xiang on 2021/10/9.
 //
 
-#include <gflags/gflags.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 #include <unistd.h>
@@ -13,10 +12,10 @@
 
 /// run faster-LIO in offline mode
 
-DEFINE_string(config_file, "./config/avia.yaml", "path to config file");
-DEFINE_string(bag_file, "/home/xiang/Data/dataset/fast_lio2/avia/2020-09-16-quick-shack.bag", "path to the ros bag");
-DEFINE_string(time_log_file, "./Log/time.log", "path to time log file");
-DEFINE_string(traj_log_file, "./Log/traj.txt", "path to traj log file");
+// DEFINE_string(config_file, "./config/avia.yaml", "path to config file");
+// DEFINE_string(bag_file, "/home/xiang/Data/dataset/fast_lio2/avia/2020-09-16-quick-shack.bag", "path to the ros bag");
+// DEFINE_string(time_log_file, "./Log/time.log", "path to time log file");
+// DEFINE_string(traj_log_file, "./Log/traj.txt", "path to traj log file");
 
 void SigHandle(int sig) {
     faster_lio::options::FLAG_EXIT = true;
@@ -24,10 +23,26 @@ void SigHandle(int sig) {
 }
 
 int main(int argc, char **argv) {
-    gflags::ParseCommandLineFlags(&argc, &argv, true);
+    // gflags::ParseCommandLineFlags(&argc, &argv, true);
+    // FLAGS_stderrthreshold = google::INFO;
+    // FLAGS_colorlogtostderr = true;
 
-    FLAGS_stderrthreshold = google::INFO;
-    FLAGS_colorlogtostderr = true;
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <CONFIG_FILE> <BAG_FILE> [TIME_LOG_FILE=Log/time.log] [TRAJ_LOG_FILE=Log/traj.txt]"
+                  << std::endl;
+        return -1;
+    }
+    std::string FLAGS_config_file = argv[1];
+    std::string FLAGS_bag_file = argv[2];
+    std::string FLAGS_time_log_file = "./Log/time.log";
+    if (argc >= 4) {
+        FLAGS_time_log_file = argv[3];
+    }
+    std::string FLAGS_traj_log_file = "./Log/traj.txt";
+    if (argc >= 5) {
+        FLAGS_traj_log_file = argv[4];
+    }
+
     google::InitGoogleLogging(argv[0]);
 
     const std::string bag_file = FLAGS_bag_file;

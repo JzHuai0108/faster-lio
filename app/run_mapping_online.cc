@@ -1,7 +1,6 @@
 //
 // Created by xiang on 2021/10/8.
 //
-#include <gflags/gflags.h>
 #include <unistd.h>
 #include <csignal>
 
@@ -9,17 +8,22 @@
 
 /// run the lidar mapping in online mode
 
-DEFINE_string(traj_log_file, "./Log/traj.txt", "path to traj log file");
+// DEFINE_string(traj_log_file, "./Log/traj.txt", "path to traj log file");
 void SigHandle(int sig) {
     faster_lio::options::FLAG_EXIT = true;
     ROS_WARN("catch sig %d", sig);
 }
 
 int main(int argc, char **argv) {
-    FLAGS_stderrthreshold = google::INFO;
-    FLAGS_colorlogtostderr = true;
+    std::string FLAGS_traj_log_file = "./Log/traj.txt";
+    if (argc >= 2) {
+        FLAGS_traj_log_file = argv[1];
+    }
+
+    // FLAGS_stderrthreshold = google::INFO;
+    // FLAGS_colorlogtostderr = true;
     google::InitGoogleLogging(argv[0]);
-    google::ParseCommandLineFlags(&argc, &argv, true);
+    // google::ParseCommandLineFlags(&argc, &argv, true);
 
     ros::init(argc, argv, "faster_lio");
     ros::NodeHandle nh;
