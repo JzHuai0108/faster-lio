@@ -7,7 +7,9 @@
 #include <unistd.h>
 #include <csignal>
 
-#include "laser_mapping.h"
+#include <glog/logging.h>
+
+#include "laser_mapping_wrap.h"
 #include "utils.h"
 
 /// run faster-LIO in offline mode
@@ -48,7 +50,7 @@ int main(int argc, char **argv) {
     const std::string bag_file = FLAGS_bag_file;
     const std::string config_file = FLAGS_config_file;
 
-    auto laser_mapping = std::make_shared<faster_lio::LaserMapping>();
+    auto laser_mapping = std::make_shared<faster_lio::LaserMappingWrap>();
     if (!laser_mapping->InitWithoutROS(FLAGS_config_file)) {
         LOG(ERROR) << "laser mapping init failed.";
         return -1;
@@ -64,8 +66,8 @@ int main(int argc, char **argv) {
     LOG(INFO) << "Go!";
 
     std::vector<std::string> topics;
-    topics.push_back(laser_mapping->lid_topic_);
-    topics.push_back(laser_mapping->imu_topic_);
+    topics.push_back(laser_mapping->lid_topic());
+    topics.push_back(laser_mapping->imu_topic());
     rosbag::View view(bag, rosbag::TopicQuery(topics));
     for (const rosbag::MessageInstance &m : view) {
         auto livox_msg = m.instantiate<livox_ros_driver::CustomMsg>();
@@ -110,7 +112,7 @@ int main(int argc, char **argv) {
 
     LOG(INFO) << "save trajectory to: " << FLAGS_traj_log_file;
 
-    laser_mapping->Savetrajectory(FLAGS_traj_log_file, laser_mapping->I_p_B_, laser_mapping->I_q_B_);
+    laser_mapping->Savetrajectory(FLAGS_traj_log_file, laser_mapping->I_p_B(), laser_mapping->I_q_B());
 
     faster_lio::Timer::PrintAll();
     faster_lio::Timer::DumpIntoFile(FLAGS_time_log_file);

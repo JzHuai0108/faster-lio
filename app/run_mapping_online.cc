@@ -4,7 +4,10 @@
 #include <unistd.h>
 #include <csignal>
 
-#include "laser_mapping.h"
+#include <glog/logging.h>
+
+#include "laser_mapping_wrap.h"
+#include "utils.h"
 
 /// run the lidar mapping in online mode
 
@@ -28,7 +31,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "faster_lio");
     ros::NodeHandle nh;
 
-    auto laser_mapping = std::make_shared<faster_lio::LaserMapping>();
+    auto laser_mapping = std::make_shared<faster_lio::LaserMappingWrap>();
     laser_mapping->InitROS(nh);
 
     signal(SIGINT, SigHandle);
@@ -49,7 +52,7 @@ int main(int argc, char **argv) {
 
     faster_lio::Timer::PrintAll();
     LOG(INFO) << "save trajectory to: " << FLAGS_traj_log_file;
-    laser_mapping->Savetrajectory(FLAGS_traj_log_file, laser_mapping->I_p_B_, laser_mapping->I_q_B_);
+    laser_mapping->Savetrajectory(FLAGS_traj_log_file, laser_mapping->I_p_B(), laser_mapping->I_q_B());
 
     return 0;
 }
