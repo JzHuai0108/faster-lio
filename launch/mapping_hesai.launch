@@ -1,5 +1,5 @@
 <launch>
-<!-- Launch file for Livox AVIA LiDAR -->
+<!-- Launch file for Hesai LiDAR -->
 
 	<arg name="rviz" default="true" />
     <arg name="bag_file" default="" />
