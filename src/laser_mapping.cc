@@ -66,6 +66,7 @@ bool LaserMapping::LoadParams(ros::NodeHandle &nh) {
     nh.param<bool>("publish/scan_effect_pub_en", scan_effect_pub_en_, false);
     nh.param<std::string>("publish/tf_imu_frame", tf_imu_frame_, "body");
     nh.param<std::string>("publish/tf_world_frame", tf_world_frame_, "camera_init");
+    nh.param<std::string>("publish/output_ref_frame", output_ref_frame_, "imu");
 
     nh.param<int>("max_iteration", options::NUM_MAX_ITERATIONS, 4);
     nh.param<float>("esti_plane_threshold", options::ESTI_PLANE_THRESHOLD, 0.1);
@@ -136,6 +137,19 @@ bool LaserMapping::LoadParams(ros::NodeHandle &nh) {
 
     lidar_T_wrt_IMU = common::VecFromArray<double>(extrinT_);
     lidar_R_wrt_IMU = common::MatFromArray<double>(extrinR_);
+    if (output_ref_frame_ == "imu") {
+        I_p_B_.setZero();
+        I_q_B_.setIdentity();
+        LOG(INFO) << "output_ref_frame is IMU";
+    } else if (output_ref_frame_ == "lidar") {
+        I_p_B_ = lidar_T_wrt_IMU;
+        I_q_B_ = Eigen::Quaterniond(lidar_R_wrt_IMU);
+        LOG(INFO) << "output_ref_frame is lidar";
+    } else {
+        LOG(ERROR) << "unknown output_ref_frame " << output_ref_frame_;
+        I_p_B_.setZero();
+        I_q_B_.setIdentity();
+    }
 
     p_imu_->SetExtrinsic(lidar_T_wrt_IMU, lidar_R_wrt_IMU);
     p_imu_->SetGyrCov(common::V3D(gyr_cov, gyr_cov, gyr_cov));
@@ -824,8 +838,9 @@ void LaserMapping::Savetrajectory(const std::string &traj_file, const common::V3
         Eigen::Quaterniond W_q_I(p.pose.orientation.w, p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z);
         Eigen::Vector3d W_p_B = W_p_I + W_q_I * I_p_B;
         Eigen::Quaterniond W_q_B = W_q_I * I_q_B;
-        ofs << std::fixed << std::setprecision(6) << p.header.stamp.toSec() << " " << std::setprecision(15)
-            << W_p_B[0] << " " << W_p_B[1] << " " << W_p_B[2] << " "
+        ofs << std::fixed << p.header.stamp.sec << "." << std::setw(9) << std::setfill('0') << p.header.stamp.nsec
+            << " " << std::setprecision(6)
+            << W_p_B[0] << " " << W_p_B[1] << " " << W_p_B[2] << " " << std::setprecision(9)
             << W_q_B.x() << " " << W_q_B.y() << " " << W_q_B.z() << " " << W_q_B.w() << std::endl;
     }
 
@@ -876,15 +891,21 @@ void LaserMapping::PointBodyLidarToIMU(PointType const *const pi, PointType *con
     po->intensity = pi->intensity;
 }
 
-void LaserMapping::Finish() {
+void LaserMapping::Finish(const std::string &output_dir) {
     /**************** save map ****************/
     /* 1. make sure you have enough memories
     /* 2. pcd save will largely influence the real-time performences **/
+    std::string myoutdir = "";
+    if (output_dir.empty()) {
+        myoutdir = std::string(ROOT_DIR) + "PCD";
+    } else {
+        myoutdir = output_dir;
+    }
     if (pcl_wait_save_->size() > 0 && pcd_save_en_) {
         std::string file_name = std::string("scans.pcd");
-        std::string all_points_dir(std::string(std::string(ROOT_DIR) + "PCD/") + file_name);
+        std::string all_points_dir(myoutdir + "/" + file_name);
         pcl::PCDWriter pcd_writer;
-        LOG(INFO) << "current scan saved to /PCD/" << file_name;
+        LOG(INFO) << "current scan saved to " << all_points_dir;
         pcd_writer.writeBinary(all_points_dir, *pcl_wait_save_);
     }
 

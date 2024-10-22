@@ -18,17 +18,19 @@ void SigHandle(int sig) {
 }
 
 int main(int argc, char **argv) {
-    std::string FLAGS_traj_log_file = "./Log/traj.txt";
-    if (argc >= 2) {
-        FLAGS_traj_log_file = argv[1];
-    }
-
     // FLAGS_stderrthreshold = google::INFO;
     // FLAGS_colorlogtostderr = true;
     google::InitGoogleLogging(argv[0]);
     // google::ParseCommandLineFlags(&argc, &argv, true);
 
     ros::init(argc, argv, "faster_lio");
+
+    std::string traj_log_file = "./Log/traj.txt";
+    if (argc >= 2) {
+        traj_log_file = argv[1];
+    }
+    std::cout << "Traj log file " << traj_log_file << std::endl;
+
     ros::NodeHandle nh;
 
     auto laser_mapping = std::make_shared<faster_lio::LaserMappingWrap>();
@@ -48,11 +50,11 @@ int main(int argc, char **argv) {
     }
 
     LOG(INFO) << "finishing mapping";
-    laser_mapping->Finish();
+    laser_mapping->Finish("");
 
     faster_lio::Timer::PrintAll();
-    LOG(INFO) << "save trajectory to: " << FLAGS_traj_log_file;
-    laser_mapping->Savetrajectory(FLAGS_traj_log_file, laser_mapping->I_p_B(), laser_mapping->I_q_B());
+    LOG(INFO) << "save trajectory to: " << traj_log_file;
+    laser_mapping->Savetrajectory(traj_log_file, laser_mapping->I_p_B(), laser_mapping->I_q_B());
 
     return 0;
 }

@@ -61,7 +61,7 @@ class LaserMapping {
     void PublishFrameEffectWorld(const ros::Publisher &pub_laser_cloud_effect_world);
     void Savetrajectory(const std::string &traj_file, const common::V3D &I_p_B, const Eigen::Quaterniond &I_q_B);
 
-    void Finish();
+    void Finish(const std::string &output_dir);
 
    private:
     template <typename T>

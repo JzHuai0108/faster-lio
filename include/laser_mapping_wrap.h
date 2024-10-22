@@ -42,7 +42,7 @@ class LaserMappingWrap {
     void PublishFrameEffectWorld(const ros::Publisher &pub_laser_cloud_effect_world);
     void Savetrajectory(const std::string &traj_file, const Eigen::Vector3d &I_p_B, const Eigen::Quaterniond &I_q_B);
 
-    void Finish();
+    void Finish(const std::string &output_dir);
 
     std::string lid_topic() const;
     std::string imu_topic() const;

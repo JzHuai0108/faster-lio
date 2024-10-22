@@ -61,8 +61,8 @@ void LaserMappingWrap::Savetrajectory(const std::string &traj_file, const common
     laser_mapper_->Savetrajectory(traj_file, I_p_B, I_q_B);
 }
 
-void LaserMappingWrap::Finish() {
-    laser_mapper_->Finish();
+void LaserMappingWrap::Finish(const std::string &output_dir) {
+    laser_mapper_->Finish(output_dir);
 }
 
 std::string LaserMappingWrap::lid_topic() const {

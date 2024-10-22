@@ -40,9 +40,9 @@ int main(int argc, char **argv) {
     if (argc >= 4) {
         FLAGS_time_log_file = argv[3];
     }
-    std::string FLAGS_traj_log_file = "./Log/traj.txt";
+    std::string traj_log_file = "./Log/traj.txt";
     if (argc >= 5) {
-        FLAGS_traj_log_file = argv[4];
+        traj_log_file = argv[4];
     }
 
     google::InitGoogleLogging(argv[0]);
@@ -104,15 +104,15 @@ int main(int argc, char **argv) {
     }
 
     LOG(INFO) << "finishing mapping";
-    laser_mapping->Finish();
+    laser_mapping->Finish("");
 
     /// print the fps
     double fps = 1.0 / (faster_lio::Timer::GetMeanTime("Laser Mapping Single Run") / 1000.);
     LOG(INFO) << "Faster LIO average FPS: " << fps;
 
-    LOG(INFO) << "save trajectory to: " << FLAGS_traj_log_file;
+    LOG(INFO) << "save trajectory to: " << traj_log_file;
 
-    laser_mapping->Savetrajectory(FLAGS_traj_log_file, laser_mapping->I_p_B(), laser_mapping->I_q_B());
+    laser_mapping->Savetrajectory(traj_log_file, laser_mapping->I_p_B(), laser_mapping->I_q_B());
 
     faster_lio::Timer::PrintAll();
     faster_lio::Timer::DumpIntoFile(FLAGS_time_log_file);
