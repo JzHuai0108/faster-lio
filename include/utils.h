@@ -49,14 +49,6 @@ class Timer {
         }
     }
 
-    static void addRecord(const std::string& func_name, double elapsed_ms) {
-        if (records_.find(func_name) != records_.end()) {
-            records_[func_name].time_usage_in_ms_.emplace_back(elapsed_ms);
-        } else {
-            records_.insert({func_name, TimerRecord(func_name, elapsed_ms)});
-        }
-    }
-
     /// print the run time
     static void PrintAll() {
         std::cout << ">>> ===== Printing run time =====";
