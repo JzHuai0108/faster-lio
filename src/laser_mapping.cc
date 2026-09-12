@@ -11,6 +11,7 @@ namespace faster_lio {
 bool LaserMapping::InitROS(ros::NodeHandle &nh) {
     LoadParams(nh);
     SubAndPubToROS(nh);
+    tf_broadcaster_ = std::make_shared<tf::TransformBroadcaster>();
 
     // localmap init (after LoadParams)
     ivox_ = std::make_shared<IVoxType>(ivox_options_);
@@ -733,7 +734,6 @@ void LaserMapping::PublishOdometry(const ros::Publisher &pub_odom_aft_mapped) {
         odom_aft_mapped_.pose.covariance[i * 6 + 5] = P(k, 2);
     }
 
-    static tf::TransformBroadcaster br;
     tf::Transform transform;
     tf::Quaternion q;
     transform.setOrigin(tf::Vector3(odom_aft_mapped_.pose.pose.position.x, odom_aft_mapped_.pose.pose.position.y,
@@ -743,7 +743,8 @@ void LaserMapping::PublishOdometry(const ros::Publisher &pub_odom_aft_mapped) {
     q.setY(odom_aft_mapped_.pose.pose.orientation.y);
     q.setZ(odom_aft_mapped_.pose.pose.orientation.z);
     transform.setRotation(q);
-    br.sendTransform(tf::StampedTransform(transform, odom_aft_mapped_.header.stamp, tf_world_frame_, tf_imu_frame_));
+    tf_broadcaster_->sendTransform(
+        tf::StampedTransform(transform, odom_aft_mapped_.header.stamp, tf_world_frame_, tf_imu_frame_));
 }
 
 void LaserMapping::PublishFrameWorld() {

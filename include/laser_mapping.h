@@ -6,6 +6,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <tf/transform_broadcaster.h>
 #include <condition_variable>
 #include <thread>
 
@@ -118,6 +119,7 @@ class LaserMapping {
     ros::Publisher pub_laser_cloud_effect_world_;
     ros::Publisher pub_odom_aft_mapped_;
     ros::Publisher pub_path_;
+    std::shared_ptr<tf::TransformBroadcaster> tf_broadcaster_;
     std::string tf_imu_frame_;
     std::string tf_world_frame_;
 
