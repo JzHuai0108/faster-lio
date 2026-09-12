@@ -5,12 +5,14 @@
 #ifndef FASTER_LIO_UTILS_H
 #define FASTER_LIO_UTILS_H
 
-#include <glog/logging.h>
+// #include <glog/logging.h>
 #include <chrono>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <numeric>
 #include <string>
+#include <vector>
 
 namespace faster_lio {
 
@@ -47,27 +49,45 @@ class Timer {
         }
     }
 
+    static void addRecord(const std::string& func_name, double elapsed_ms) {
+        if (records_.find(func_name) != records_.end()) {
+            records_[func_name].time_usage_in_ms_.emplace_back(elapsed_ms);
+        } else {
+            records_.insert({func_name, TimerRecord(func_name, elapsed_ms)});
+        }
+    }
+
     /// print the run time
     static void PrintAll() {
-        LOG(INFO) << ">>> ===== Printing run time =====";
+        std::cout << ">>> ===== Printing run time =====";
         for (const auto& r : records_) {
-            LOG(INFO) << "> [ " << r.first << " ] average time usage: "
+            std::cout << "> [ " << r.first << " ] average time usage: "
                       << std::accumulate(r.second.time_usage_in_ms_.begin(), r.second.time_usage_in_ms_.end(), 0.0) /
                              double(r.second.time_usage_in_ms_.size())
                       << " ms , called times: " << r.second.time_usage_in_ms_.size();
         }
-        LOG(INFO) << ">>> ===== Printing run time end =====";
+        std::cout << ">>> ===== Printing run time end =====";
     }
 
     /// dump to a log file
     static void DumpIntoFile(const std::string& file_name) {
         std::ofstream ofs(file_name, std::ios::out);
         if (!ofs.is_open()) {
-            LOG(ERROR) << "Failed to open file: " << file_name;
+            std::cout << "Failed to open file: " << file_name;
             return;
         } else {
-            LOG(INFO) << "Dump Time Records into file: " << file_name;
+            std::cout << "Dump Time Records into file: " << file_name;
         }
+
+        std::cout << ">>> ===== Printing run time =====";
+        for (const auto& r : records_) {
+            ofs << "> [ " << r.first << " ] average time usage: "
+                << std::accumulate(r.second.time_usage_in_ms_.begin(), r.second.time_usage_in_ms_.end(), 0.0) /
+                        double(r.second.time_usage_in_ms_.size())
+                << " ms , called times: " << r.second.time_usage_in_ms_.size() << "\n";
+        }
+        ofs << "\n";
+        std::cout << ">>> ===== Printing run time end =====";
 
         size_t max_length = 0;
         for (const auto& iter : records_) {
